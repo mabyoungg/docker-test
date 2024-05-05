@@ -9,13 +9,19 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
-COPY src src
 
 # Gradle 래퍼에 실행 권한 부여
 RUN chmod +x ./gradlew
 
+# 종속성 설치
+# 이 단계에서 변경사항이 없다면, 다음 빌드에서 캐시됩니다.
+RUN ./gradlew dependencies --no-daemon
+
+# 소스 코드 복사
+COPY src src
+
 # 애플리케이션 빌드
-RUN ./gradlew clean build
+RUN ./gradlew build --no-daemon
 
 # 두 번째 스테이지: 실행 스테이지
 FROM ghcr.io/graalvm/graalvm-community:21
