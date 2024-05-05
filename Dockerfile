@@ -1,5 +1,5 @@
-# GraalVM을 기반 이미지로 사용
-FROM ghcr.io/graalvm/graalvm-community:21
+# 첫 번째 스테이지: 빌드 스테이지
+FROM ghcr.io/graalvm/graalvm-community:21 as builder
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -17,9 +17,16 @@ RUN chmod +x ./gradlew
 # 애플리케이션 빌드
 RUN ./gradlew clean build
 
-RUN mv build/libs/*.jar /app/app.jar
+# 두 번째 스테이지: 실행 스테이지
+FROM ghcr.io/graalvm/graalvm-community:21
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# 첫 번째 스테이지에서 빌드된 JAR 파일 복사
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 # 실행할 JAR 파일 지정
 # 여기서는 단일 JAR 파일을 가정하고 있지만, 여러 파일이 있는 경우
 # 실행할 특정 파일을 지정해야 합니다.
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
